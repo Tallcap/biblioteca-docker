@@ -1,0 +1,175 @@
+<div class="row justify-content-center align-items-center login-container">
+  <div class="col-12 col-md-7 col-lg-5">
+    <div class="card card-custom p-4 p-md-5">
+      <!-- Encabezado con Icono -->
+      <div class="text-center mb-4">
+        <div class="icon-circle mb-3 mx-auto shadow-sm">
+          <i class="bi bi-book text-primary fs-1"></i>
+        </div>
+        <h2 class="fw-bold text-dark mb-1">Biblio<span class="text-primary">Tech</span></h2>
+        <p class="text-muted small">Sistema Integral de Gestión de Biblioteca</p>
+      </div>
+
+      <!-- Pestañas para alternar entre Iniciar Sesión y Registrarse -->
+      <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill">
+        <li class="nav-item">
+          <button
+            class="nav-link rounded-pill py-2 fw-semibold"
+            [class.active]="modo === 'login'"
+            (click)="cambiarModo('login')"
+            type="button"
+          >
+            <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link rounded-pill py-2 fw-semibold"
+            [class.active]="modo === 'registro'"
+            (click)="cambiarModo('registro')"
+            type="button"
+          >
+            <i class="bi bi-person-plus me-1"></i> Registrarse
+          </button>
+        </li>
+      </ul>
+
+      <!-- Alertas de Error y Éxito -->
+      <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-shield-x me-2 fs-5 align-middle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- FORMULARIO 1: INICIAR SESIÓN -->
+      <form *ngIf="modo === 'login'" (ngSubmit)="iniciarSesion()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nombre de Usuario</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="username"
+              name="username"
+              placeholder="Ej. admin o tu usuario"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Contraseña</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+            <input
+              type="password"
+              class="form-control"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ isLoading ? 'Verificando...' : 'Entrar al Sistema' }}
+        </button>
+
+        <div class="text-center mt-3">
+          <span class="text-muted small">¿No tienes cuenta? </span>
+          <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold small" (click)="cambiarModo('registro')">
+            Regístrate aquí
+          </a>
+        </div>
+      </form>
+
+      <!-- FORMULARIO 2: REGISTRO DE NUEVO USUARIO -->
+      <form *ngIf="modo === 'registro'" (ngSubmit)="registrarUsuario()">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nombre Completo *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-card-heading"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="regNombreCompleto"
+              name="regNombreCompleto"
+              placeholder="Ej. Carlos Mendoza"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Nombre de Usuario *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-at"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="regUsername"
+              name="regUsername"
+              placeholder="Ej. cmendoza"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Contraseña *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-key"></i></span>
+            <input
+              type="password"
+              class="form-control"
+              [(ngModel)]="regPassword"
+              name="regPassword"
+              placeholder="Mínimo 4 caracteres"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Confirmar Contraseña *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-shield-check"></i></span>
+            <input
+              type="password"
+              class="form-control"
+              [(ngModel)]="regConfirmPassword"
+              name="regConfirmPassword"
+              placeholder="Repita la contraseña real"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+          <small class="text-muted">Ambas contraseñas deben coincidir exactamente.</small>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 py-2 fw-semibold shadow-sm" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ isLoading ? 'Registrando...' : 'Crear Cuenta y Acceder' }}
+        </button>
+
+        <div class="text-center mt-3">
+          <span class="text-muted small">¿Ya tienes cuenta? </span>
+          <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold small" (click)="cambiarModo('login')">
+            Inicia sesión aquí
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

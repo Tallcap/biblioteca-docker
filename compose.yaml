@@ -1,0 +1,13 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:4200:80"
+
+#Describe cómo levantar los dos servicios juntos.
+#Indica en qué carpeta se construye cada imagen y cómo se conectan los puertos del contenedor con los de tu computadora.

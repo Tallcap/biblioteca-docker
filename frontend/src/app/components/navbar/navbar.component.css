@@ -1,0 +1,7 @@
+.navbar {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+}
+
+.navbar-brand {
+  letter-spacing: 0.5px;
+}

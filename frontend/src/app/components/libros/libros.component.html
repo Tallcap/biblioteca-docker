@@ -1,0 +1,268 @@
+<div>
+  <!-- Mensajes de alerta flotantes / superiores -->
+  <div *ngIf="mensajeExito" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>{{ mensajeExito }}
+    <button type="button" class="btn-close" (click)="mensajeExito = ''"></button>
+  </div>
+
+  <div *ngIf="mensajeError" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+    <i class="bi bi-exclamation-octagon-fill me-2"></i>{{ mensajeError }}
+    <button type="button" class="btn-close" (click)="mensajeError = ''"></button>
+  </div>
+
+  <!-- Encabezado con estadísticas y botón de nuevo -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-7">
+      <h2 class="fw-bold text-dark mb-1">
+        <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>Catálogo de Libros
+      </h2>
+      <p class="text-muted mb-0">Administra los libros registrados en la base de datos</p>
+    </div>
+    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+      <button class="btn btn-primary shadow-sm px-3 py-2 fw-semibold" (click)="abrirModalCrear()">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Libro
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="card card-custom p-3 mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-6 col-lg-7">
+        <div class="input-group">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por título, autor, ISBN o género..."
+            [(ngModel)]="filtroTexto"
+            (input)="aplicarFiltros()"
+          />
+          <button *ngIf="filtroTexto" class="btn btn-outline-secondary" (click)="limpiarBusqueda()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-5 text-md-end">
+        <div class="btn-group" role="group">
+          <button
+            type="button"
+            class="btn btn-sm"
+            [ngClass]="filtroEstado === 'todos' ? 'btn-primary' : 'btn-outline-secondary'"
+            (click)="cambiarFiltroEstado('todos')"
+          >
+            Todos ({{ libros.length }})
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [ngClass]="filtroEstado === 'disponibles' ? 'btn-success' : 'btn-outline-secondary'"
+            (click)="cambiarFiltroEstado('disponibles')"
+          >
+            Disponibles
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [ngClass]="filtroEstado === 'prestados' ? 'btn-danger' : 'btn-outline-secondary'"
+            (click)="cambiarFiltroEstado('prestados')"
+          >
+            Prestados
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spinner de Carga -->
+  <div *ngIf="cargando" class="text-center py-5">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Cargando libros...</span>
+    </div>
+    <p class="text-muted mt-2">Conectando a la API y cargando libros...</p>
+  </div>
+
+  <!-- Tabla de Libros -->
+  <div *ngIf="!cargando" class="card card-custom overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">#</th>
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Género</th>
+            <th>ISBN</th>
+            <th>Año</th>
+            <th class="text-center">Estado</th>
+            <th class="text-end pe-4">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let libro of librosFiltrados; let i = index">
+            <td class="ps-4 text-muted">{{ libro.id }}</td>
+            <td>
+              <div class="fw-bold text-dark">{{ libro.titulo }}</div>
+            </td>
+            <td>{{ libro.autor }}</td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ libro.genero }}</span>
+            </td>
+            <td><code class="text-secondary">{{ libro.isbn }}</code></td>
+            <td>{{ libro.anioPublicacion }}</td>
+            <td class="text-center text-nowrap">
+              <span [class]="libro.disponible ? 'badge-disponible' : 'badge-prestado'">
+                  <i [class]="libro.disponible ? 'bi bi-check2-circle me-1' : 'bi bi-x-circle me-1'"></i>
+                  {{ libro.disponible ? 'Disponible' : 'Prestado' }}
+                </span>
+            </td>
+            <td class="text-end pe-4 text-nowrap">
+              <button
+                type="button"
+                class="btn btn-sm me-2"
+                [class.btn-outline-warning]="libro.disponible"
+                [class.btn-outline-success]="!libro.disponible"
+                [disabled]="libro.id === undefined || cambiandoDisponibilidad.has(libro.id)"
+                (click)="toggleDisponibilidad(libro)"
+                [title]="libro.disponible ? 'Marcar como prestado' : 'Marcar como disponible'"
+                [attr.aria-label]="libro.disponible ? 'Marcar como prestado' : 'Marcar como disponible'"
+              >
+                <i [class]="libro.disponible ? 'bi bi-box-arrow-up-right' : 'bi bi-arrow-return-left'" aria-hidden="true"></i>
+              </button>
+              <button
+                class="btn btn-outline-primary btn-sm me-2"
+                (click)="abrirModalEditar(libro)"
+                title="Editar libro"
+              >
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                (click)="abrirConfirmarEliminar(libro)"
+                title="Eliminar libro"
+              >
+                <i class="bi bi-trash3"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Mensaje cuando no hay registros -->
+          <tr *ngIf="librosFiltrados.length === 0">
+            <td colspan="8" class="text-center py-5">
+              <i class="bi bi-inbox text-muted fs-1 d-block mb-2"></i>
+              <p class="text-muted mb-0">No se encontraron libros con los filtros seleccionados.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL PARA CREAR / EDITAR LIBRO -->
+  <div *ngIf="mostrarModal" class="modal-backdrop-custom d-flex justify-content-center align-items-center">
+    <div class="modal-dialog-custom card card-custom p-4 shadow-lg">
+      <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+        <h5 class="fw-bold mb-0">
+          <i [class]="modoEdicion ? 'bi bi-pencil-square text-primary me-2' : 'bi bi-plus-circle text-success me-2'"></i>
+          {{ modoEdicion ? 'Editar Libro' : 'Nuevo Libro' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()" [disabled]="guardando"></button>
+      </div>
+
+      <form (ngSubmit)="guardarLibro()">
+        <div *ngIf="errorFormulario" class="alert alert-danger" role="alert">{{ errorFormulario }}</div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Título del Libro *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="libroSeleccionado.titulo"
+            name="titulo"
+            maxlength="255"
+            placeholder="Ej. Cien Años de Soledad"
+            required
+          />
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Autor *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="libroSeleccionado.autor"
+              name="autor"
+              maxlength="255"
+              placeholder="Ej. Gabriel García Márquez"
+              required
+            />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">ISBN</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="libroSeleccionado.isbn"
+              name="isbn"
+              maxlength="255"
+              placeholder="978-0307474728"
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Género / Categoría *</label>
+            <select class="form-select" [(ngModel)]="libroSeleccionado.genero" name="genero" required>
+              <option *ngIf="libroSeleccionado.genero && !generos.includes(libroSeleccionado.genero)" [value]="libroSeleccionado.genero">{{ libroSeleccionado.genero }}</option>
+              <option *ngFor="let genero of generos" [value]="genero">
+                {{ genero === 'Tecnología' ? 'Tecnología / Ingeniería' : genero }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Año de Publicación *</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="libroSeleccionado.anioPublicacion"
+              name="anioPublicacion"
+              required
+              min="1"
+              [max]="anioActual"
+              step="1"
+              placeholder="Ej. 1967"
+            />
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+          <button type="button" class="btn btn-secondary px-3" (click)="cerrarModal()" [disabled]="guardando">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4 fw-semibold" [disabled]="guardando">
+            <i class="bi bi-save me-1"></i> {{ modoEdicion ? 'Guardar Cambios' : 'Registrar Libro' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR ELIMINACIÓN -->
+  <div *ngIf="mostrarModalEliminar" class="modal-backdrop-custom d-flex justify-content-center align-items-center">
+    <div class="modal-dialog-custom card card-custom p-4 shadow-lg text-center" style="max-width: 420px;">
+      <div class="mb-3">
+        <i class="bi bi-trash3 text-danger" style="font-size: 3rem;"></i>
+      </div>
+      <h5 class="fw-bold text-dark">¿Eliminar este libro?</h5>
+      <p class="text-muted">
+        ¿Estás seguro de eliminar <strong class="text-dark">"{{ libroAEliminar?.titulo }}"</strong>? Esta acción no se puede deshacer.
+      </p>
+      <div class="d-flex justify-content-center gap-2 mt-4">
+        <button type="button" class="btn btn-secondary px-3" (click)="cerrarModalEliminar()">Cancelar</button>
+        <button type="button" class="btn btn-danger px-4 fw-semibold" (click)="confirmarEliminar()">
+          Sí, eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+
+#para que Docker omita las dependencias y los archivos generados en Windows
+
+node_modules
+dist
+.angular
+
+#porque las dependencias y la compilación se generan dentro de Docker. 
+#Así tampoco enviamos los archivos de compilaciones anteriores de Windows.
+
